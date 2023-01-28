@@ -9,7 +9,9 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
 class Base3d {
-  constructor(selector) {
+  container: HTMLElement | null
+
+  constructor(selector: string) {
     this.container = document.querySelector(selector)
     this.camera
     this.scene
@@ -21,6 +23,7 @@ class Base3d {
     this.mixer
     this.init()
   }
+
   init() {
     this.initClock()
     this.initStats()

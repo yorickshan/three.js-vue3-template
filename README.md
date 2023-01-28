@@ -23,10 +23,10 @@ If you have access to Tailwind UI, first-party plugins are needed:
 ### Getting Started
 
 ```sh
-npm i
-npm run dev
-npm run build
-npm run serve
+pnpm i
+pnpm run dev
+pnpm run build
+pnpm run serve
 ```
 
 ### Contributing
