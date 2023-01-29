@@ -1,9 +1,9 @@
-# ⚡ Three.js-Vue3-Boilerplate
-
-<center class="half">
-<img src="./src/assets/threedotjs.svg" width = "30%" height = "30%" alt="图片名称" align=center />
-</center>
+<p align="center">
+    <img src="https://raw.githubusercontent.com/yorickshan/Three.js-Vue3-Boilerplate/main/src/assets/threevue.svg?token=GHSAT0AAAAAAB236UKWJ6KUGT23645WGRDGY6V3YWQ" width = "26%" alt="three-vue" align=center />
+</p>
 <br />
+
+# Three.js-Vue3-Boilerplate
 
 A modern starter project for Three.js with:
 
