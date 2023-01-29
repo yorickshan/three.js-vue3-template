@@ -1,9 +1,14 @@
 # ⚡ Three.js-Vue3-Boilerplate
 
+<center class="half">
+<img src="./src/assets/threedotjs.svg" width = "30%" height = "30%" alt="图片名称" align=center />
+</center>
+<br />
+
 A modern starter project for Three.js with:
 
 - [Three.js](https://threejs.org/)
-- [Vite](https://vitejs.dev/guide/)
+- [Vite 4](https://vitejs.dev/guide/)
 - [Vue 3](https://vuejs.org/guide/introduction.html)
 - [Tailwind CSS v3](https://tailwindcss.com/docs/configuration)
 - [Vue Router v4](https://router.vuejs.org/)
