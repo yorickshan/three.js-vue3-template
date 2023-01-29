@@ -1,5 +1,7 @@
 <p align="center">
-    <img src="https://raw.githubusercontent.com/yorickshan/Three.js-Vue3-Boilerplate/main/src/assets/threevue.svg?token=GHSAT0AAAAAAB236UKWJ6KUGT23645WGRDGY6V3YWQ" width = "26%" alt="three-vue" align=center />
+  <a href="https://yorickshan.github.io/Three.js-Vue3-Boilerplate/" target="_blank" rel="noopener noreferrer">
+      <img src="https://raw.githubusercontent.com/yorickshan/Three.js-Vue3-Boilerplate/main/src/assets/threevue.svg?token=GHSAT0AAAAAAB236UKWJ6KUGT23645WGRDGY6V3YWQ" width = "26%" alt="three-vue" align=center />
+  </a>
 </p>
 <br />
 
