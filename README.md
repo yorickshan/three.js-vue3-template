@@ -27,7 +27,7 @@ If you have access to Tailwind UI, first-party plugins are needed:
 - [tailwindcss/line-clamp](https://github.com/tailwindlabs/tailwindcss-line-clamp)
 - [tailwindcss/aspect-ratio](https://github.com/tailwindlabs/tailwindcss-aspect-ratio)
 
-### Getting Started
+## Getting Started
 
 ```sh
 pnpm i
@@ -39,3 +39,7 @@ pnpm run serve
 ## Contribution
 
 If you want to add some features, feel free to submit PR.
+
+## License
+
+[MIT](LICENSE).
