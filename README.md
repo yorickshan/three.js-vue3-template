@@ -10,7 +10,7 @@
 A modern starter project for Three.js with:
 
 - [Three.js](https://threejs.org/)
-- [Vite 4](https://vitejs.dev/guide/)
+- [Vite 5](https://vitejs.dev/guide/)
 - [Vue 3](https://vuejs.org/guide/introduction.html)
 - [Tailwind CSS v3](https://tailwindcss.com/docs/configuration)
 - [Vue Router v4](https://router.vuejs.org/)
@@ -36,6 +36,6 @@ pnpm run build
 pnpm run serve
 ```
 
-### Contributing
+## Contribution
 
-If you want to add some features, feel free to submit PR
+If you want to add some features, feel free to submit PR.
