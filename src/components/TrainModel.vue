@@ -1,40 +1,28 @@
 <script setup lang="ts">
-// ==================== 原有代码开始 ====================
-import Base3d from '../utils/Base3d'
-import { reactive, onMounted } from 'vue'
-import Info from '@/components/Info.vue'
-
-const data = reactive({
-  base3d: {} as any,
-})
-
-onMounted(() => {
-  data.base3d = new Base3d('#three')
-})
-// ==================== 原有代码结束 ====================
-
-// ==================== 新增代码开始：火车模型交互控制 ====================
-import { ref, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as THREE from 'three'
 import { useTrainAnimation, useTrainMaterials } from '@/composables/useTrainAnimation'
 
-// 火车相关状态
+interface Props {
+  scene: THREE.Scene
+  camera: THREE.Camera
+  renderer: THREE.WebGLRenderer
+}
+
+const props = defineProps<Props>()
+
 const trainGroup = ref<THREE.Group | null>(null)
 const raycaster = new THREE.Raycaster()
 const mouse = new THREE.Vector2()
 const animationId = ref<number>(0)
 const trainPosition = ref(0)
-const isSceneReady = ref(false)
 
-// 使用 Composable 管理动画状态
 const { isHighlighted, isAccelerated, currentSpeed, toggleHighlight, toggleSpeed, resetState } = useTrainAnimation(0.02)
 const { storeOriginalMaterials, applyHighlight, disposeMaterials } = useTrainMaterials()
 
-// 创建火车模型
 const createTrainModel = () => {
   const group = new THREE.Group()
 
-  // 车身
   const bodyGeometry = new THREE.BoxGeometry(2, 1, 4)
   const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.4, metalness: 0.6 })
   const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
@@ -42,7 +30,6 @@ const createTrainModel = () => {
   body.castShadow = true
   group.add(body)
 
-  // 驾驶室
   const cabinGeometry = new THREE.BoxGeometry(1.6, 0.8, 2)
   const cabinMaterial = new THREE.MeshStandardMaterial({ color: 0x1e40af, roughness: 0.4, metalness: 0.6 })
   const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial)
@@ -50,7 +37,6 @@ const createTrainModel = () => {
   cabin.castShadow = true
   group.add(cabin)
 
-  // 烟囱
   const chimneyGeometry = new THREE.CylinderGeometry(0.15, 0.2, 0.6)
   const chimneyMaterial = new THREE.MeshStandardMaterial({ color: 0x374151, roughness: 0.6, metalness: 0.4 })
   const chimney = new THREE.Mesh(chimneyGeometry, chimneyMaterial)
@@ -58,7 +44,6 @@ const createTrainModel = () => {
   chimney.castShadow = true
   group.add(chimney)
 
-  // 车轮
   const wheelGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16)
   const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.7, metalness: 0.3 })
   const wheelPositions = [[-0.8, 0.3, 1.2], [0.8, 0.3, 1.2], [-0.8, 0.3, -1.2], [0.8, 0.3, -1.2]]
@@ -70,7 +55,6 @@ const createTrainModel = () => {
     group.add(wheel)
   })
 
-  // 车灯
   const lightGeometry = new THREE.SphereGeometry(0.15)
   const lightMaterial = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfef08a, emissiveIntensity: 0.5 })
   const headLight = new THREE.Mesh(lightGeometry, lightMaterial)
@@ -81,15 +65,12 @@ const createTrainModel = () => {
   return group
 }
 
-// 鼠标移动事件：检测悬停
 const onMouseMove = (event: MouseEvent) => {
-  if (!isSceneReady.value || !data.base3d.camera || !data.base3d.renderer) return
-  
-  const rect = data.base3d.renderer.domElement.getBoundingClientRect()
+  const rect = props.renderer.domElement.getBoundingClientRect()
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
 
-  raycaster.setFromCamera(mouse, data.base3d.camera)
+  raycaster.setFromCamera(mouse, props.camera)
   if (trainGroup.value) {
     const intersects = raycaster.intersectObjects(trainGroup.value.children, true)
     const wasHighlighted = isHighlighted.value
@@ -100,11 +81,8 @@ const onMouseMove = (event: MouseEvent) => {
   }
 }
 
-// 点击事件：切换速度
 const onClick = () => {
-  if (!isSceneReady.value || !data.base3d.camera) return
-  
-  raycaster.setFromCamera(mouse, data.base3d.camera)
+  raycaster.setFromCamera(mouse, props.camera)
   if (trainGroup.value) {
     const intersects = raycaster.intersectObjects(trainGroup.value.children, true)
     if (intersects.length > 0) {
@@ -113,9 +91,8 @@ const onClick = () => {
   }
 }
 
-// 火车动画循环
-const animateTrain = () => {
-  animationId.value = requestAnimationFrame(animateTrain)
+const animate = () => {
+  animationId.value = requestAnimationFrame(animate)
 
   if (trainGroup.value) {
     trainPosition.value += currentSpeed.value
@@ -128,39 +105,26 @@ const animateTrain = () => {
   }
 }
 
-// 监听场景初始化完成
-watch(() => data.base3d.scene, (scene) => {
-  if (scene && !isSceneReady.value) {
-    isSceneReady.value = true
-    
-    // 添加火车模型到场景
-    trainGroup.value = createTrainModel()
-    storeOriginalMaterials(trainGroup.value)
-    scene.add(trainGroup.value)
+onMounted(() => {
+  trainGroup.value = createTrainModel()
+  storeOriginalMaterials(trainGroup.value)
+  props.scene.add(trainGroup.value)
 
-    // 添加事件监听
-    if (data.base3d.renderer) {
-      data.base3d.renderer.domElement.addEventListener('mousemove', onMouseMove)
-      data.base3d.renderer.domElement.addEventListener('click', onClick)
-    }
+  props.renderer.domElement.addEventListener('mousemove', onMouseMove)
+  props.renderer.domElement.addEventListener('click', onClick)
 
-    // 启动火车动画
-    animateTrain()
-  }
-}, { immediate: true })
+  animate()
+})
 
-// 组件卸载时清理资源
 onUnmounted(() => {
   if (animationId.value) {
     cancelAnimationFrame(animationId.value)
   }
 
-  if (data.base3d.renderer) {
-    data.base3d.renderer.domElement.removeEventListener('mousemove', onMouseMove)
-    data.base3d.renderer.domElement.removeEventListener('click', onClick)
-  }
+  props.renderer.domElement.removeEventListener('mousemove', onMouseMove)
+  props.renderer.domElement.removeEventListener('click', onClick)
 
-  if (trainGroup.value && data.base3d.scene) {
+  if (trainGroup.value) {
     trainGroup.value.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.geometry.dispose()
@@ -171,7 +135,7 @@ onUnmounted(() => {
         }
       }
     })
-    data.base3d.scene.remove(trainGroup.value)
+    props.scene.remove(trainGroup.value)
   }
 
   disposeMaterials()
@@ -179,30 +143,21 @@ onUnmounted(() => {
 
   console.log('[TrainModel] 资源已释放')
 })
-// ==================== 新增代码结束 ====================
 </script>
 
 <template>
-  <div class="relative">
-    <div class="three" id="three"></div>
-    <Info />
-    
-    <!-- ==================== 新增代码开始：火车状态面板 ==================== -->
-    <div class="train-status">
-      <div class="status-item">
-        <span class="label">状态:</span>
-        <span class="value" :class="{ active: isHighlighted }">{{ isHighlighted ? '高亮' : '正常' }}</span>
-      </div>
-      <div class="status-item">
-        <span class="label">速度:</span>
-        <span class="value" :class="{ active: isAccelerated }">{{ isAccelerated ? '加速 (2x)' : '正常' }}</span>
-      </div>
+  <div class="train-status">
+    <div class="status-item">
+      <span class="label">状态:</span>
+      <span class="value" :class="{ active: isHighlighted }">{{ isHighlighted ? '高亮' : '正常' }}</span>
     </div>
-    <!-- ==================== 新增代码结束 ==================== -->
+    <div class="status-item">
+      <span class="label">速度:</span>
+      <span class="value" :class="{ active: isAccelerated }">{{ isAccelerated ? '加速 (2x)' : '正常' }}</span>
+    </div>
   </div>
 </template>
 
-<!-- ==================== 新增代码开始：样式 ==================== -->
 <style scoped>
 .train-status {
   position: fixed;
@@ -243,4 +198,3 @@ onUnmounted(() => {
   color: #fbbf24;
 }
 </style>
-<!-- ==================== 新增代码结束 ==================== -->
