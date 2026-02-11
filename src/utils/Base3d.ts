@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { Clock, PerspectiveCamera, Scene, WebGLRenderer, AnimationMixer } from 'three'
+import { Clock, PerspectiveCamera, Scene, WebGLRenderer, AnimationMixer, Raycaster, Vector2 } from 'three'
 import Stats from 'stats.js'
 // 导入控制器，轨道控制器
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
@@ -7,6 +7,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { useTrainAnimation } from './useTrainAnimation'
 
 class Base3d {
   public container: HTMLElement
@@ -17,6 +18,10 @@ class Base3d {
   public renderer: WebGLRenderer
   public controls: OrbitControls
   public mixer: AnimationMixer | null
+  public trainAnimation: ReturnType<typeof useTrainAnimation>
+  public raycaster: Raycaster
+  public mouse: Vector2
+  public trainModel: THREE.Object3D | null
 
   constructor(selector: string) {
     this.container = document.querySelector(selector) as HTMLElement
@@ -27,6 +32,10 @@ class Base3d {
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.mixer = null
+    this.trainAnimation = useTrainAnimation()
+    this.raycaster = new Raycaster()
+    this.mouse = new Vector2()
+    this.trainModel = null
     this.init()
   }
 
@@ -44,6 +53,9 @@ class Base3d {
     this.setModel()
     // 监听场景大小改变，调整渲染尺寸
     window.addEventListener('resize', this.onWindowResize.bind(this))
+    // 监听鼠标事件
+    this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this))
+    this.renderer.domElement.addEventListener('click', this.onMouseClick.bind(this))
   }
 
   initStats() {
@@ -80,7 +92,7 @@ class Base3d {
   animate() {
     window.requestAnimationFrame(this.animate.bind(this))
     const delta = this.clock.getDelta()
-    this.mixer?.update(delta)
+    this.trainAnimation.update(delta)
     this.controls.update()
     this.stats.update()
     this.renderer.render(this.scene, this.camera)
@@ -100,6 +112,9 @@ class Base3d {
         this.scene.add(model)
 
         this.mixer = new THREE.AnimationMixer(model)
+        this.trainModel = model
+        this.trainAnimation.setTrainModel(model)
+        this.trainAnimation.setMixer(this.mixer)
         this.mixer.clipAction(gltf.animations[0]).play()
 
         console.log('模型添加成功')
@@ -115,6 +130,46 @@ class Base3d {
     this.camera.aspect = window.innerWidth / window.innerHeight
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(window.innerWidth, window.innerHeight)
+  }
+
+  onMouseMove(event: MouseEvent) {
+    if (!this.trainModel) return
+
+    this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+    this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+
+    this.raycaster.setFromCamera(this.mouse, this.camera)
+    const intersects = this.raycaster.intersectObject(this.trainModel, true)
+
+    if (intersects.length > 0 && !this.trainAnimation.isHighlighted.value) {
+      this.trainAnimation.highlightTrain()
+    } else if (intersects.length === 0 && this.trainAnimation.isHighlighted.value) {
+      this.trainAnimation.unhighlightTrain()
+    }
+  }
+
+  onMouseClick(event: MouseEvent) {
+    if (!this.trainModel) return
+
+    this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+    this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+
+    this.raycaster.setFromCamera(this.mouse, this.camera)
+    const intersects = this.raycaster.intersectObject(this.trainModel, true)
+
+    if (intersects.length > 0) {
+      this.trainAnimation.toggleAcceleration()
+    }
+  }
+
+  dispose() {
+    window.removeEventListener('resize', this.onWindowResize.bind(this))
+    this.renderer.domElement.removeEventListener('mousemove', this.onMouseMove.bind(this))
+    this.renderer.domElement.removeEventListener('click', this.onMouseClick.bind(this))
+    this.trainAnimation.dispose()
+    this.mixer?.stopAllAction()
+    this.mixer = null
+    this.trainModel = null
   }
 }
 
